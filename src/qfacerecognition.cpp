@@ -1,4 +1,6 @@
 #include "qfacerecognition.hpp"
+#include "imageconvertor.hpp"
+
 #include <dlib/clustering.h>
 #include <dlib/dnn.h>
 #include <dlib/gui_widgets.h>
@@ -8,7 +10,8 @@
 
 #include <QDebug>
 #include <QDir>
-
+#include <QImage>
+#include <QPixmap>
 
 using namespace std;
 using namespace dlib;
@@ -65,8 +68,8 @@ public:
     shape_predictor       sp;
     anet_type             net;
 
-    std::vector<matrix<rgb_pixel>>   known_faces;
-    std::vector<string>              known_faces_names;
+    std::vector<matrix<rgb_pixel>> known_faces;
+    std::vector<string>            known_faces_names;
     std::vector<matrix<float, 0, 1>> known_face_descriptors;
 
     void introduce(const QString& name, const matrix<rgb_pixel>& img);
@@ -78,14 +81,15 @@ public:
     void readFolder(
         const QString&                  path,
         std::vector<matrix<rgb_pixel>>& imgs,
-        std::vector<string>             names);
+        std::vector<string>&            names);
 };
 
 void
 QFaceRecognitionPrivate::introduce(
     const QString& name, const matrix<rgb_pixel>& img) {
     for (auto face : detector(img)) {
-        auto              shape = sp(img, face);
+        auto shape = sp(img, face);
+
         matrix<rgb_pixel> face_chip;
         extract_image_chip(
             img, get_face_chip_details(shape, 150, 0.25), face_chip);
@@ -95,10 +99,15 @@ QFaceRecognitionPrivate::introduce(
 }
 
 void
+readImage(matrix<rgb_pixel>& img, const std::string& path) {
+    QPixmap p{QString::fromStdString(path)};
+}
+
+void
 QFaceRecognitionPrivate::readFolder(
     const QString&                  path,
     std::vector<matrix<rgb_pixel>>& imgs,
-    std::vector<string>             names) {
+    std::vector<string>&            names) {
     QDir        d(path);
     QStringList images = d.entryList(
         QStringList() << "*.jpg"
@@ -106,7 +115,9 @@ QFaceRecognitionPrivate::readFolder(
         QDir::Files);
     foreach (QString filename, images) {
         matrix<rgb_pixel> img;
-        load_image(img, (path + "/" + filename).toStdString());
+        QImage            image(path + "/" + filename);
+        convert(image, img);
+        save_jpeg(img, "ss.jpg");
         std::string imgName = filename.section(".", 0, 0).toStdString();
         for (auto face : detector(img)) {
             auto              shape = sp(img, face);
@@ -167,25 +178,31 @@ QFaceRecognition::recognize(const QPixmap& face) {
 
 QList<QPair<QString, QString>>
 QFaceRecognition::recognizeFolder(const QString& path, double diff) {
-    std::vector<matrix<rgb_pixel>>   unknown_faces;
-    std::vector<string>              unknown_faces_names;
+    std::vector<matrix<rgb_pixel>> unknown_faces;
+    std::vector<string>            unknown_faces_names;
+    d_ptr->readFolder(path, unknown_faces, unknown_faces_names);
     std::vector<matrix<float, 0, 1>> unknown_face_descriptors =
         d_ptr->net(unknown_faces);
 
-    d_ptr->readFolder(path, unknown_faces, unknown_faces_names);
-
     QList<QPair<QString, QString>> ans;
 
+    qDebug() << d_ptr->known_face_descriptors.size()
+             << unknown_face_descriptors.size() << unknown_faces_names.size()
+             << d_ptr->known_faces_names.size();
+
     for (size_t i = 0; i < unknown_face_descriptors.size(); ++i)
-        for (size_t j = i; j < d_ptr->known_face_descriptors.size(); ++j) {
+        for (size_t j = 0; j < d_ptr->known_face_descriptors.size(); ++j) {
             if (length(
                     unknown_face_descriptors[i] -
                     d_ptr->known_face_descriptors[j]) <
                 static_cast<float>(diff))
-                ans.push_back(
-                    {QString::fromStdString(unknown_faces_names[i]),
-                     QString::fromStdString(d_ptr->known_faces_names[j])});
+                qDebug() << "a";
+            ans.push_back(
+                {QString::fromStdString(unknown_faces_names[i]),
+                 QString::fromStdString(d_ptr->known_faces_names[j])});
+            qDebug() << "b";
         }
+    qDebug() << "c";
     return ans;
 }
 
