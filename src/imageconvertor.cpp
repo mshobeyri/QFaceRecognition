@@ -1,19 +1,21 @@
 #include "imageconvertor.hpp"
 
-#include <QRgb>
 #include <QDebug>
+#include <QRgb>
 
 using namespace dlib;
+
 void
 convert(const QImage& src, matrix<rgb_pixel>& dst) {
     dst.set_size(src.height(), src.width());
+    auto it = dst.begin();
+    int col = 0;
+    for (int i = 0; i < src.height(); ++i)
+        for (int j = 0; it != dst.end() && j < src.width(); ++j, it++) {
+            auto c = src.pixel(j, i);
 
-    for (int i=0; i < src.width(); ++i)
-        for (int j = 0; j < src.height(); ++j) {
-            auto c = src.pixel(i, j);
-            auto& sc = dst(j,i);
-            sc.blue = qBlue(c);
-            sc.green = qGreen(c);
-            sc.red = qRed(c);
+            it->blue  = qBlue(c);
+            it->green = qGreen(c);
+            it->red   = qRed(c);
         }
 }

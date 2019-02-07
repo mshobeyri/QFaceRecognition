@@ -113,7 +113,7 @@ QFaceRecognitionPrivate::readFolder(
         QStringList() << "*.jpg"
                       << "*.png",
         QDir::Files);
-    foreach (QString filename, images) {
+    for (auto& filename : images) {
         matrix<rgb_pixel> img;
         QImage            image(path + "/" + filename);
         convert(image, img);
@@ -186,23 +186,15 @@ QFaceRecognition::recognizeFolder(const QString& path, double diff) {
 
     QList<QPair<QString, QString>> ans;
 
-    qDebug() << d_ptr->known_face_descriptors.size()
-             << unknown_face_descriptors.size() << unknown_faces_names.size()
-             << d_ptr->known_faces_names.size();
-
     for (size_t i = 0; i < unknown_face_descriptors.size(); ++i)
         for (size_t j = 0; j < d_ptr->known_face_descriptors.size(); ++j) {
-            if (length(
-                    unknown_face_descriptors[i] -
-                    d_ptr->known_face_descriptors[j]) <
-                static_cast<float>(diff))
-                qDebug() << "a";
-            ans.push_back(
-                {QString::fromStdString(unknown_faces_names[i]),
-                 QString::fromStdString(d_ptr->known_faces_names[j])});
-            qDebug() << "b";
+            auto l = length(
+                unknown_face_descriptors[i] - d_ptr->known_face_descriptors[j]);
+            if (l < static_cast<float>(diff))
+                ans.push_back(
+                    {QString::fromStdString(unknown_faces_names[i]),
+                     QString::fromStdString(d_ptr->known_faces_names[j])});
         }
-    qDebug() << "c";
     return ans;
 }
 
