@@ -1,6 +1,7 @@
 #include "imageconvertor.hpp"
 
 #include <QDebug>
+#include <QElapsedTimer>
 #include <QRgb>
 
 using namespace dlib;
@@ -8,14 +9,17 @@ using namespace dlib;
 void
 convert(const QImage& src, matrix<rgb_pixel>& dst) {
     dst.set_size(src.height(), src.width());
-    auto it = dst.begin();
-    int col = 0;
-    for (int i = 0; i < src.height(); ++i)
-        for (int j = 0; it != dst.end() && j < src.width(); ++j, it++) {
-            auto c = src.pixel(j, i);
 
-            it->blue  = qBlue(c);
-            it->green = qGreen(c);
-            it->red   = qRed(c);
-        }
+    auto dstIt = dst.begin();
+    int  i     = 0;
+
+    QRgb* st = (QRgb*)src.bits();
+    while (dstIt != dst.end() && i < src.width() * src.height()) {
+        const auto& str = st[i];
+        dstIt->blue     = qBlue(str);
+        dstIt->green    = qGreen(str);
+        dstIt->red      = qRed(str);
+        ++dstIt;
+        ++i;
+    }
 }
