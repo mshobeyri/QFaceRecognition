@@ -23,3 +23,8 @@ convert(const QImage& src, matrix<rgb_pixel>& dst) {
         ++i;
     }
 }
+
+void
+convert(const QPixmap& src, matrix<rgb_pixel>& dst) {
+    convert(src.toImage(), dst);
+}

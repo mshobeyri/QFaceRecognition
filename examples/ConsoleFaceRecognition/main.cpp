@@ -1,7 +1,7 @@
-#include "qfacerecognition.hpp"
-#include "imageconvertor.hpp"
 #include "dlib/matrix.h"
 #include "dlib/pixel.h"
+#include "imageconvertor.hpp"
+#include "qfacerecognition.hpp"
 
 
 #include <QCoreApplication>
@@ -12,7 +12,7 @@ int
 main(int argc, char* argv[]) {
     QCoreApplication a(argc, argv);
 
-    QImage src{"C:/Qt/erfan.png"};
+    QImage                        src{"C:/Qt/erfan.png"};
     dlib::matrix<dlib::rgb_pixel> dst;
 
     if (argc < 3) {
@@ -23,9 +23,10 @@ main(int argc, char* argv[]) {
         return 1;
     }
 
-
-    QFaceRecognition f{"../../model/dlib_face_recognition_resnet_model_v1.dat",
-                       "../../model/shape_predictor_5_face_landmarks.dat"};
+    QFaceRecognition::setModel(
+        "../../model/dlib_face_recognition_resnet_model_v1.dat",
+        "../../model/shape_predictor_5_face_landmarks.dat");
+    QFaceRecognition f;
 
     qDebug() << "read known";
     f.introduceFolder(argv[1]);

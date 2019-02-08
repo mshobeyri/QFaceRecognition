@@ -8,13 +8,14 @@ class QFaceRecognition : public QObject
 {
     Q_OBJECT
 public:
-    QFaceRecognition(const QString& netPath, const QString& spPath);
+    QFaceRecognition(QObject * parent = nullptr);
     ~QFaceRecognition();
-#ifdef QFACERECOGNITION_QML
-    static void registerQmlTypes(const QString& netPath, const QString& spPath);
-#endif
 
-    Q_INVOKABLE void introduce(const QString& name, const QImage& face);
+    static void setModel(const QString& netPath, const QString& spPath);
+#ifdef QFACERECOGNITION_QML
+    static void registerQmlTypes();
+#endif
+    Q_INVOKABLE void introduce(const QString& name, const QImage& image);
     Q_INVOKABLE void introduce(const QString& name, const QPixmap& face);
     Q_INVOKABLE void introduceFolder(const QString& path);
     Q_INVOKABLE void introduceFile(const QString& path);

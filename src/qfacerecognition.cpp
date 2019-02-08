@@ -1,5 +1,10 @@
 #include "qfacerecognition.hpp"
+#include "QtQml/qqml.h"
 #include "imageconvertor.hpp"
+
+#ifdef QFACERECOGNITION_MEDIA
+#include "qfacerecognitionfilter.h"
+#endif
 
 #include <dlib/clustering.h>
 #include <dlib/dnn.h>
@@ -58,15 +63,14 @@ using anet_type = loss_metric<fc_no_bias<
         2,
         relu<affine<con<32, 7, 7, 2, 2, input_rgb_image_sized<150>>>>>>>>>>>>>;
 
-
 class QFaceRecognitionPrivate
 {
 public:
     QFaceRecognitionPrivate() {}
 
-    frontal_face_detector detector = get_frontal_face_detector();
-    shape_predictor       sp;
-    anet_type             net;
+    frontal_face_detector  detector = get_frontal_face_detector();
+    static shape_predictor sp;
+    static anet_type       net;
 
     std::vector<matrix<rgb_pixel>> known_faces;
     std::vector<string>            known_faces_names;
@@ -83,6 +87,9 @@ public:
         std::vector<matrix<rgb_pixel>>& imgs,
         std::vector<string>&            names);
 };
+
+shape_predictor QFaceRecognitionPrivate::sp;
+anet_type       QFaceRecognitionPrivate::net;
 
 void
 QFaceRecognitionPrivate::introduce(
@@ -117,7 +124,6 @@ QFaceRecognitionPrivate::readFolder(
         matrix<rgb_pixel> img;
         QImage            image(path + "/" + filename);
         convert(image, img);
-        save_jpeg(img, "ss.jpg");
         std::string imgName = filename.section(".", 0, 0).toStdString();
         for (auto face : detector(img)) {
             auto              shape = sp(img, face);
@@ -133,29 +139,47 @@ QFaceRecognitionPrivate::readFolder(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-QFaceRecognition::QFaceRecognition(
-    const QString& netPath, const QString& spPath)
-    : d_ptr(new QFaceRecognitionPrivate) {
-    deserialize(netPath.toStdString()) >> d_ptr->net;
-    deserialize(spPath.toStdString()) >> d_ptr->sp;
-}
+QFaceRecognition::QFaceRecognition(QObject* parent)
+    : QObject(parent), d_ptr(new QFaceRecognitionPrivate) {}
 
 QFaceRecognition::~QFaceRecognition() {}
 
+void
+QFaceRecognition::setModel(const QString& netPath, const QString& spPath) {
+    deserialize(netPath.toStdString()) >> QFaceRecognitionPrivate::net;
+    deserialize(spPath.toStdString()) >> QFaceRecognitionPrivate::sp;
+}
+
 #ifdef QFACERECOGNITION_QML
 void
-QFaceRecognition::registerQmlTypes(
-    const QString& netPath, const QString& spPath) {
-    //    registerQmlTypes<QFaceRecognition{netPath,spPath}>(
-    //        "FaceRecognition", 1, 0, "FaceRecognition");
+QFaceRecognition::registerQmlTypes() {
+    qmlRegisterType<QFaceRecognition>(
+        "FaceRecognition", 1, 0, "FaceRecognition");
+#ifdef QFACERECOGNITION_MEDIA
+    qmlRegisterType<QFaceRecognitionFilter>(
+        "FaceRecognition", 1, 0, "FaceRecognitionFilter");
+#endif
 }
 #endif
 
 void
-QFaceRecognition::introduce(const QString& name, const QImage& face) {}
+QFaceRecognition::introduce(const QString& name, const QImage& image) {
+    matrix<rgb_pixel> img;
+    convert(image, img);
+    for (auto face : d_ptr->detector(img)) {
+        auto              shape = d_ptr->sp(img, face);
+        matrix<rgb_pixel> face_chip;
+        extract_image_chip(
+            img, get_face_chip_details(shape, 150, 0.25), face_chip);
+        d_ptr->known_faces.push_back(move(face_chip));
+        d_ptr->known_faces_names.push_back(name.toStdString());
+    }
+}
 
 void
-QFaceRecognition::introduce(const QString& name, const QPixmap& face) {}
+QFaceRecognition::introduce(const QString& name, const QPixmap& face) {
+    introduce(name, face.toImage());
+}
 
 void
 QFaceRecognition::introduceFolder(const QString& path) {

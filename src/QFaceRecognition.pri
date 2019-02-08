@@ -5,9 +5,22 @@ INCLUDEPATH += $$PWD/
 DEPENDPATH += $$PWD/
 
 
+contains( QT, multimedia){
+DEFINES += QFACERECOGNITION_MEDIA
+
+HEADERS +=  \
+$$PWD/qfacerecognitionfilter.h
+
+SOURCES +=  \
+$$PWD/qfacerecognitionfilter.cpp
+}
+
+contains( QT, quick ){
+DEFINES += QFACERECOGNITION_QML
+}
+
 HEADERS += $$PWD/qfacerecognition.hpp \
-    $$PWD/qfacerecognitionfilter.h \
     $$PWD/imageconvertor.hpp
 SOURCES += $$PWD/qfacerecognition.cpp \
-    $$PWD/qfacerecognitionfilter.cpp \
     $$PWD/imageconvertor.cpp
+
