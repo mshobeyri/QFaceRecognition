@@ -17,6 +17,6 @@ struct QFace {
     bool  isKnown = false;
 };
 
-using QFaceList = std::vector<QFace>;
+using QFaceList = QList<QFace>;
 
 #endif // FACERECOGNITIONTYPES_HPP
