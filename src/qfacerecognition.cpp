@@ -15,6 +15,7 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QFileInfo>
 #include <QImage>
 #include <QPixmap>
 
@@ -63,6 +64,9 @@ using anet_type = loss_metric<fc_no_bias<
         2,
         relu<affine<con<32, 7, 7, 2, 2, input_rgb_image_sized<150>>>>>>>>>>>>>;
 
+
+///////////////////////////////////////////////////////////////////////////////
+
 class QFaceRecognitionPrivate
 {
 public:
@@ -72,68 +76,107 @@ public:
     static shape_predictor sp;
     static anet_type       net;
 
-    std::vector<matrix<rgb_pixel>> known_faces;
-    std::vector<string>            known_faces_names;
-    std::vector<matrix<float, 0, 1>> known_face_descriptors;
 
-    void introduce(const QString& name, const matrix<rgb_pixel>& img);
+    double m_distanceThreshold;
 
-    void extractDescriptors() {
-        known_face_descriptors = net(known_faces);
-    }
+    QFaceList knownFaces;
 
-    void readFolder(
-        const QString&                  path,
-        std::vector<matrix<rgb_pixel>>& imgs,
-        std::vector<string>&            names);
+    bool detectFace(const matrix<rgb_pixel>& img, QFace& qface);
+    QFaceList detectFaces(const matrix<rgb_pixel>& img);
+    void recognizeFace(QFace& face);
+    QFaceList recognizeFaces(const matrix<rgb_pixel>& img);
+    bool introduce(const QString& name, const matrix<rgb_pixel>& img);
+
+    QStringList imagesInPath(const QString& path);
 };
 
 shape_predictor QFaceRecognitionPrivate::sp;
 anet_type       QFaceRecognitionPrivate::net;
 
-void
-QFaceRecognitionPrivate::introduce(
-    const QString& name, const matrix<rgb_pixel>& img) {
-    for (auto face : detector(img)) {
-        auto shape = sp(img, face);
 
-        matrix<rgb_pixel> face_chip;
+bool
+QFaceRecognitionPrivate::detectFace(
+    const matrix<rgb_pixel>& img, QFace& qface) {
+    auto detected = detector(img);
+    if (detected.size() > 1) {
+        qDebug() << "more than one face detected";
+        return false;
+    }
+    if (detected.size() < 1) {
+        qDebug() << "no face detected";
+        return false;
+    }
+    auto face  = detector(img)[0];
+    auto shape = sp(img, face);
+
+    extract_image_chip(
+        img, get_face_chip_details(shape, 150, 0.25), qface.faceMatrix);
+
+    qface.descriptor = net(qface.faceMatrix);
+    return true;
+}
+
+QFaceList
+QFaceRecognitionPrivate::detectFaces(const matrix<rgb_pixel>& img) {
+    QFaceList detectedFaces;
+    for (auto faceImg : detector(img)) {
+        QFace face;
+        auto  shape = sp(img, faceImg);
         extract_image_chip(
-            img, get_face_chip_details(shape, 150, 0.25), face_chip);
-        known_faces.push_back(move(face_chip));
-        known_faces_names.push_back(name.toStdString());
+            img, get_face_chip_details(shape, 150, 0.25), face.faceMatrix);
+        const auto& r = shape.get_rect();
+        face.position = QRect{r.left(),
+                              r.top(),
+                              static_cast<int>(r.width()),
+                              static_cast<int>(r.height())};
+        detectedFaces.push_back(std::move(face));
+    }
+    return detectedFaces;
+}
+
+void
+QFaceRecognitionPrivate::recognizeFace(QFace& face) {
+    for (size_t j = 0; j < knownFaces.size(); ++j) {
+        auto l = length(face.descriptor - knownFaces[j].descriptor);
+        if (l < face.bestMatch)
+            face.bestMatch = l;
+        if (l < static_cast<float>(m_distanceThreshold)) {
+            face.name    = knownFaces[j].name;
+            face.isKnown = true;
+        }
     }
 }
 
-void
-readImage(matrix<rgb_pixel>& img, const std::string& path) {
-    QPixmap p{QString::fromStdString(path)};
+QFaceList
+QFaceRecognitionPrivate::recognizeFaces(const matrix<rgb_pixel>& img) {
+    QFaceList detectedFaces = detectFaces(img);
+    for (auto face : detectedFaces) {
+        recognizeFace(face);
+    }
+    return detectedFaces;
 }
 
-void
-QFaceRecognitionPrivate::readFolder(
-    const QString&                  path,
-    std::vector<matrix<rgb_pixel>>& imgs,
-    std::vector<string>&            names) {
-    QDir        d(path);
-    QStringList images = d.entryList(
+bool
+QFaceRecognitionPrivate::introduce(
+    const QString& name, const matrix<rgb_pixel>& img) {
+    QFace face;
+    if (detectFace(img, face)) {
+        face.name    = name;
+        face.isKnown = true;
+        knownFaces.push_back(std::move(face));
+        return true;
+    }
+    return false;
+}
+
+
+QStringList
+QFaceRecognitionPrivate::imagesInPath(const QString& path) {
+    QDir d(path);
+    return d.entryList(
         QStringList() << "*.jpg"
                       << "*.png",
         QDir::Files);
-    for (auto& filename : images) {
-        matrix<rgb_pixel> img;
-        QImage            image(path + "/" + filename);
-        convert(image, img);
-        std::string imgName = filename.section(".", 0, 0).toStdString();
-        for (auto face : detector(img)) {
-            auto              shape = sp(img, face);
-            matrix<rgb_pixel> face_chip;
-            extract_image_chip(
-                img, get_face_chip_details(shape, 150, 0.25), face_chip);
-            imgs.push_back(move(face_chip));
-            names.push_back(imgName);
-        }
-    }
 }
 
 
@@ -166,63 +209,63 @@ void
 QFaceRecognition::introduce(const QString& name, const QImage& image) {
     matrix<rgb_pixel> img;
     convert(image, img);
-    for (auto face : d_ptr->detector(img)) {
-        auto              shape = d_ptr->sp(img, face);
-        matrix<rgb_pixel> face_chip;
-        extract_image_chip(
-            img, get_face_chip_details(shape, 150, 0.25), face_chip);
-        d_ptr->known_faces.push_back(move(face_chip));
-        d_ptr->known_faces_names.push_back(name.toStdString());
-    }
+    d_ptr->introduce(name, img);
 }
 
 void
-QFaceRecognition::introduce(const QString& name, const QPixmap& face) {
-    introduce(name, face.toImage());
+QFaceRecognition::introduce(const QString& name, const QPixmap& pixmap) {
+    introduce(name, pixmap.toImage());
 }
 
 void
 QFaceRecognition::introduceFolder(const QString& path) {
-    d_ptr->readFolder(path, d_ptr->known_faces, d_ptr->known_faces_names);
-    d_ptr->extractDescriptors();
+    for (auto& filename : d_ptr->imagesInPath(path)) {
+        introduceFile(path + "/" + filename);
+    }
 }
 
 void
-QFaceRecognition::introduceFile(const QString& path) {}
-
-QString
-QFaceRecognition::recognize(const QImage& face) {
-    return "";
+QFaceRecognition::introduceFile(const QString& path) {
+    introduce(QFileInfo{path}.baseName(), QImage{path});
 }
 
-QString
-QFaceRecognition::recognize(const QPixmap& face) {
-    return "";
+QFaceList
+QFaceRecognition::recognize(const QImage& image) {
+    matrix<rgb_pixel> img;
+    convert(image, img);
+    return d_ptr->recognizeFaces(img);
 }
 
-QList<QPair<QString, QString>>
-QFaceRecognition::recognizeFolder(const QString& path, double diff) {
-    std::vector<matrix<rgb_pixel>> unknown_faces;
-    std::vector<string>            unknown_faces_names;
-    d_ptr->readFolder(path, unknown_faces, unknown_faces_names);
-    std::vector<matrix<float, 0, 1>> unknown_face_descriptors =
-        d_ptr->net(unknown_faces);
-
-    QList<QPair<QString, QString>> ans;
-
-    for (size_t i = 0; i < unknown_face_descriptors.size(); ++i)
-        for (size_t j = 0; j < d_ptr->known_face_descriptors.size(); ++j) {
-            auto l = length(
-                unknown_face_descriptors[i] - d_ptr->known_face_descriptors[j]);
-            if (l < static_cast<float>(diff))
-                ans.push_back(
-                    {QString::fromStdString(unknown_faces_names[i]),
-                     QString::fromStdString(d_ptr->known_faces_names[j])});
-        }
-    return ans;
+QFaceList
+QFaceRecognition::recognize(const QPixmap& pixmap) {
+    return recognize(pixmap.toImage());
 }
 
-QString
+QFaceList
+QFaceRecognition::recognizeFolder(const QString& path) {
+    QFaceList faces;
+
+    for (auto& filename : d_ptr->imagesInPath(path)) {
+        faces.append(recognizeFile(path + "/" + filename));
+    }
+    return faces;
+}
+
+QFaceList
 QFaceRecognition::recognizeFile(const QString& path) {
-    return "";
+    auto faceList = recognize(QImage{path});
+    for (auto& face : faceList) {
+        face.source = path;
+    }
+    return faceList;
+}
+
+double
+QFaceRecognition::distanceThreshold() const {
+    return d_ptr->m_distanceThreshold;
+}
+
+void
+QFaceRecognition::setDistanceThreshold(double distanceThreshold) {
+    d_ptr->m_distanceThreshold = distanceThreshold;
 }

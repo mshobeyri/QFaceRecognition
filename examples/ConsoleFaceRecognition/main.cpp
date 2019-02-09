@@ -32,7 +32,7 @@ main(int argc, char* argv[]) {
     f.introduceFolder(argv[1]);
 
     qDebug() << "read unknown";
-    qDebug() << f.recognizeFolder(argv[2], 0.6);
+    qDebug() << f.recognizeFolder(argv[2]);
 
 
     return a.exec();

@@ -112,136 +112,23 @@ QFaceRecognitionFilterRunnable::run(
 
 void
 QFaceRecognitionFilterRunnable::processVideoFrameProbed(
-    SimpleVideoFrame& videoFrame, const QRect& _captureRect) {
-    static unsigned int i = 0;
-    i++;
-    //    qDebug() << "Future: Going to process frame: " << i;
+    SimpleVideoFrame& videoFrame, const QRect& captureRect) {
 
-    const int         width  = videoFrame.size.width();
-    const int         height = videoFrame.size.height();
-    const CaptureRect captureRect(_captureRect, width, height);
-    const uchar*      data =
+    const int    width  = videoFrame.size.width();
+    const int    height = videoFrame.size.height();
+    const uchar* data =
         reinterpret_cast<const uchar*>(videoFrame.data.constData());
 
-    uchar* pixel;
-    int    wh;
-    int    w_2;
-    int    wh_54;
+    QImage img{data,
+               width,
+               height,
+               QVideoFrame::imageFormatFromPixelFormat(videoFrame.pixelFormat)};
+    img = img.copy(captureRect);
 
-    const uint32_t* yuvPtr = reinterpret_cast<const uint32_t*>(data);
-
-    /// Create QImage from QVideoFrame.
-    QImage* image_ptr = nullptr;
-
-    switch (videoFrame.pixelFormat) {
-    case QVideoFrame::Format_BGR555:
-        /// This is a forced "conversion", colors end up swapped.
-        image_ptr = new QImage(data, width, height, QImage::Format_RGB555);
-        break;
-    case QVideoFrame::Format_BGR565:
-        /// This is a forced "conversion", colors end up swapped.
-        image_ptr = new QImage(data, width, height, QImage::Format_RGB16);
-        break;
-    case QVideoFrame::Format_YUV420P:
-        // fix for issues #4 and #9
-        image_ptr = new QImage(
-            captureRect.targetWidth,
-            captureRect.targetHeight,
-            QImage::Format_Grayscale8);
-        pixel = image_ptr->bits();
-        wh    = width * height;
-        w_2   = width / 2;
-        wh_54 = wh * 5 / 4;
-
-        for (int y = captureRect.startY; y < captureRect.endY; y++) {
-            const int Y_offset = y * width;
-            const int y_2      = y / 2;
-            const int U_offset = y_2 * w_2 + wh;
-            const int V_offset = y_2 * w_2 + wh_54;
-            for (int x = captureRect.startX; x < captureRect.endX; x++) {
-                const int   x_2 = x / 2;
-                const uchar Y   = data[Y_offset + x];
-                const uchar U   = data[U_offset + x_2];
-                const uchar V   = data[V_offset + x_2];
-                *pixel          = yuvToGray(Y, U, V);
-                ++pixel;
-            }
-        }
-        break;
-    case QVideoFrame::Format_NV12:
-        /// nv12 format, encountered on macOS
-        image_ptr = new QImage(
-            captureRect.targetWidth,
-            captureRect.targetHeight,
-            QImage::Format_Grayscale8);
-        pixel = image_ptr->bits();
-        wh    = width * height;
-        w_2   = width / 2;
-        wh_54 = wh * 5 / 4;
-
-        for (int y = captureRect.startY; y < captureRect.endY; y++) {
-            const int Y_offset = y * width;
-            const int y_2      = y / 2;
-            const int U_offset = y_2 * w_2 + wh;
-            const int V_offset = y_2 * w_2 + wh_54;
-            for (int x = captureRect.startX; x < captureRect.endX; x++) {
-                const int   x_2 = x / 2;
-                const uchar Y   = data[Y_offset + x];
-                const uchar U   = data[U_offset + x_2];
-                const uchar V   = data[V_offset + x_2];
-                *pixel          = yuvToGray(Y, U, V);
-                ++pixel;
-            }
-        }
-        break;
-    case QVideoFrame::Format_YUYV:
-        image_ptr = new QImage(
-            captureRect.targetWidth,
-            captureRect.targetHeight,
-            QImage::Format_Grayscale8);
-        pixel = image_ptr->bits();
-
-        for (int y = captureRect.startY; y < captureRect.endY; y++) {
-            const uint32_t* row = &yuvPtr[y * (width / 2) - (width / 4)];
-            for (int x = captureRect.startX; x < captureRect.endX; x++) {
-                const uint8_t* pxl = reinterpret_cast<const uint8_t*>(&row[x]);
-                const uint8_t  y0  = pxl[0];
-                const uint8_t  u   = pxl[1];
-                const uint8_t  v   = pxl[3];
-                *pixel             = yuvToGray(y0, u, v);
-                ++pixel;
-            }
-        }
-        break;
-    /// TODO: Handle (create QImages from) YUV formats.
-    default:
-        QImage::Format imageFormat =
-            QVideoFrame::imageFormatFromPixelFormat(videoFrame.pixelFormat);
-        image_ptr = new QImage(data, width, height, imageFormat);
-        break;
-    }
-
-    if (!image_ptr || image_ptr->isNull()) {
-        qDebug() << "QFaceRecognitionFilterRunnable error: Cant create image "
-                    "file to process.";
-        qDebug() << "Maybe it was a format conversion problem? ";
-        qDebug() << "VideoFrame format: " << videoFrame.pixelFormat;
-        qDebug()
-            << "Image corresponding format: "
-            << QVideoFrame::imageFormatFromPixelFormat(videoFrame.pixelFormat);
-        filter->recognizing = false;
-        return;
-    }
-
-    if (captureRect.isValid && image_ptr->size() != _captureRect.size())
-        image_ptr = new QImage(image_ptr->copy(_captureRect));
-
-    decode(*image_ptr);
-
-    delete image_ptr;
+    decode(img);
 }
 
-QString
+QFaceList
 QFaceRecognitionFilterRunnable::decode(const QImage& image) {
-    return "";
+    return filter->fr.recognize(image);
 }

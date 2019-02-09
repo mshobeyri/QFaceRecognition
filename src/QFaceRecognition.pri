@@ -20,7 +20,8 @@ DEFINES += QFACERECOGNITION_QML
 }
 
 HEADERS += $$PWD/qfacerecognition.hpp \
-    $$PWD/imageconvertor.hpp
+    $$PWD/imageconvertor.hpp \
+    $$PWD/facerecognitiontypes.hpp
 SOURCES += $$PWD/qfacerecognition.cpp \
     $$PWD/imageconvertor.cpp
 

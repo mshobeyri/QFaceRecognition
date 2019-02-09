@@ -1,6 +1,7 @@
 #ifndef QFACERECOGNITIONFILTER_H
 #define QFACERECOGNITIONFILTER_H
 
+#include "facerecognitiontypes.hpp"
 #include "qfacerecognition.hpp"
 
 #include <QDebug>
@@ -76,10 +77,10 @@ public:
         const QVideoSurfaceFormat& surfaceFormat,
         RunFlags                   flags);
     void processVideoFrameProbed(
-        SimpleVideoFrame& videoFrame, const QRect& _captureRect);
+        SimpleVideoFrame& videoFrame, const QRect& captureRect);
 
 private:
-    QString decode(const QImage& image);
+    QFaceList decode(const QImage& image);
 
 private:
     QFaceRecognitionFilter* filter;
