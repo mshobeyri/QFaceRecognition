@@ -10,6 +10,7 @@ void
 convert(const QImage& src, matrix<rgb_pixel>& dst) {
     dst.set_size(src.height(), src.width());
     auto dstIt = dst.begin();
+    int    i   = 0;
     QRgb* st = (QRgb*)src.bits();
     while (dstIt != dst.end() && i < src.width() * src.height()) {
         const auto& str = st[i];
