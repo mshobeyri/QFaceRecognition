@@ -26,6 +26,7 @@ main(int argc, char* argv[]) {
     QFaceRecognition::setModel(
         "../../model/dlib_face_recognition_resnet_model_v1.dat",
         "../../model/shape_predictor_5_face_landmarks.dat");
+
     QFaceRecognition f;
 
     qDebug() << "read known";
