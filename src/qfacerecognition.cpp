@@ -77,11 +77,12 @@ public:
     static anet_type       net;
 
 
-    double m_distanceThreshold;
+    double m_distanceThreshold = 0.6;
 
     QFaceList knownFaces;
 
-    bool detectFace(const matrix<rgb_pixel>& img, QFace& qface);
+    void extractFeatures(QFace& face);
+    bool detectFace(const matrix<rgb_pixel>& img, QFace& face);
     QFaceList detectFaces(const matrix<rgb_pixel>& img);
     void recognizeFace(QFace& face);
     QFaceList recognizeFaces(const matrix<rgb_pixel>& img);
@@ -94,9 +95,19 @@ shape_predictor QFaceRecognitionPrivate::sp;
 anet_type       QFaceRecognitionPrivate::net;
 
 
+void
+QFaceRecognitionPrivate::extractFeatures(QFace& face) {
+
+    static int s = 0;
+    s++;
+    dlib::save_jpeg(
+        face.faceChip,
+        QString("c:/Qt/" + QString::number(s) + ".jpg").toStdString());
+    face.descriptor = net(face.faceChip);
+}
+
 bool
-QFaceRecognitionPrivate::detectFace(
-    const matrix<rgb_pixel>& img, QFace& qface) {
+QFaceRecognitionPrivate::detectFace(const matrix<rgb_pixel>& img, QFace& face) {
     auto detected = detector(img);
     if (detected.size() > 1) {
         qDebug() << "more than one face detected";
@@ -106,29 +117,29 @@ QFaceRecognitionPrivate::detectFace(
         qDebug() << "no face detected";
         return false;
     }
-    auto face  = detector(img)[0];
-    auto shape = sp(img, face);
+    auto faceImg = detector(img)[0];
+    auto shape   = sp(img, faceImg);
 
     extract_image_chip(
-        img, get_face_chip_details(shape, 150, 0.25), qface.faceMatrix);
+        img, get_face_chip_details(shape, 150, 0.25), face.faceChip);
 
-    qface.descriptor = net(qface.faceMatrix);
     return true;
 }
 
 QFaceList
 QFaceRecognitionPrivate::detectFaces(const matrix<rgb_pixel>& img) {
     QFaceList detectedFaces;
-    for (auto faceImg : detector(img)) {
+    for (auto& faceImg : detector(img)) {
         QFace face;
         auto  shape = sp(img, faceImg);
         extract_image_chip(
-            img, get_face_chip_details(shape, 150, 0.25), face.faceMatrix);
+            img, get_face_chip_details(shape, 150, 0.25), face.faceChip);
         const auto& r = shape.get_rect();
         face.position = QRect{r.left(),
                               r.top(),
                               static_cast<int>(r.width()),
                               static_cast<int>(r.height())};
+        face.descriptor = net(face.faceChip);
         detectedFaces.push_back(std::move(face));
     }
     return detectedFaces;
@@ -136,13 +147,16 @@ QFaceRecognitionPrivate::detectFaces(const matrix<rgb_pixel>& img) {
 
 void
 QFaceRecognitionPrivate::recognizeFace(QFace& face) {
-    for (size_t j = 0; j < knownFaces.size(); ++j) {
+    extractFeatures(face);
+    for (int j = 0; j < knownFaces.size(); ++j) {
         auto l = length(face.descriptor - knownFaces[j].descriptor);
-        if (l < face.bestMatch)
-            face.bestMatch = l;
-        if (l < static_cast<float>(m_distanceThreshold)) {
+        if (l < face.distance)
+            face.distance = l;
+        if (length(face.descriptor - knownFaces[j].descriptor) <
+            m_distanceThreshold) {
             face.name    = knownFaces[j].name;
             face.isKnown = true;
+            return;
         }
     }
 }
@@ -150,7 +164,7 @@ QFaceRecognitionPrivate::recognizeFace(QFace& face) {
 QFaceList
 QFaceRecognitionPrivate::recognizeFaces(const matrix<rgb_pixel>& img) {
     QFaceList detectedFaces = detectFaces(img);
-    for (auto face : detectedFaces) {
+    for (auto& face : detectedFaces) {
         recognizeFace(face);
     }
     return detectedFaces;
@@ -161,6 +175,7 @@ QFaceRecognitionPrivate::introduce(
     const QString& name, const matrix<rgb_pixel>& img) {
     QFace face;
     if (detectFace(img, face)) {
+        extractFeatures(face);
         face.name    = name;
         face.isKnown = true;
         knownFaces.push_back(std::move(face));
@@ -175,7 +190,8 @@ QFaceRecognitionPrivate::imagesInPath(const QString& path) {
     QDir d(path);
     return d.entryList(
         QStringList() << "*.jpg"
-                      << "*.png",
+                      << "*.png"
+                      << "*.jpeg",
         QDir::Files);
 }
 
@@ -244,7 +260,6 @@ QFaceRecognition::recognize(const QPixmap& pixmap) {
 QFaceList
 QFaceRecognition::recognizeFolder(const QString& path) {
     QFaceList faces;
-
     for (auto& filename : d_ptr->imagesInPath(path)) {
         faces.append(recognizeFile(path + "/" + filename));
     }
