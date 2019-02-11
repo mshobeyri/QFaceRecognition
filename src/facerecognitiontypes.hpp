@@ -30,4 +30,7 @@ struct QFace {
 
 using QFaceList = QList<QFace>;
 
+enum QFaceRecognitionMode { Detection, Recognize };
+
+
 #endif // FACERECOGNITIONTYPES_HPP

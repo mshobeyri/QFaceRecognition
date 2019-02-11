@@ -8,6 +8,8 @@ class QFaceRecognitionPrivate;
 class QFaceRecognition : public QObject
 {
     Q_OBJECT
+    Q_ENUMS(QFaceRecognitionMode)
+    Q_PROPERTY(uint mode READ mode WRITE setMode NOTIFY modeChanged)
 public:
     QFaceRecognition(QObject* parent = nullptr);
     ~QFaceRecognition();
@@ -16,6 +18,7 @@ public:
 #ifdef QFACERECOGNITION_QML
     static void registerQmlTypes();
 #endif
+
     Q_INVOKABLE void introduce(const QString& name, const QImage& image);
     Q_INVOKABLE void introduce(const QString& name, const QPixmap& pixmap);
     Q_INVOKABLE void introduceFolder(const QString& path);
@@ -26,9 +29,13 @@ public:
     Q_INVOKABLE QFaceList recognizeFolder(const QString& path);
     Q_INVOKABLE QFaceList recognizeFile(const QString& path);
 
-    double distanceThreshold() const;
-    void setDistanceThreshold(double distanceThreshold);
+    Q_INVOKABLE uint mode() const;
+    Q_INVOKABLE  void setMode(const uint& mode);
 
+    double           distanceThreshold() const;
+    void setDistanceThreshold(double distanceThreshold);
+signals:
+    void modeChanged();
 private:
     Q_DECLARE_PRIVATE(QFaceRecognition)
     QScopedPointer<QFaceRecognitionPrivate> d_ptr;

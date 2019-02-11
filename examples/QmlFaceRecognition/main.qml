@@ -4,6 +4,7 @@ import FaceRecognition 1.0
 import QtMultimedia 5.5
 
 Window {
+    id: iwin
     visible: true
     width: 640
     height: 480
@@ -24,8 +25,20 @@ Window {
             videoOutput.contentRect;
             videoOutput.sourceRect;
             return videoOutput.mapRectToSource(videoOutput.mapNormalizedRectToItem(Qt.rect(
-                0, 0, 1, 1
-            )));
+                                                                                       0, 0, 1, 1
+                                                                                       )));
+        }
+        faceRecognition{
+            mode: FaceRecognition.Recognize
+        }
+
+        onFaceRecognized: {
+            rr.isKnown = true
+            rr.name = name
+            rr.x = position.x
+            rr.y = position.y
+            rr.width = position.width
+            rr.height = position.height
         }
     }
 
@@ -45,5 +58,10 @@ Window {
                 camera.focus.focusPointMode = CameraFocus.FocusPointCustom;
             }
         }
+    }
+    RecognizeRect{
+        id: rr
+        width: 100
+        height: 100
     }
 }

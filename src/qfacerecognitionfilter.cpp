@@ -114,7 +114,7 @@ QFaceRecognitionFilterRunnable::processVideoFrameProbed(
 
     auto s = recognize(img);
     if (s.length() > 0)
-        qDebug() << s[0].name;
+        emit filter->faceRecognized(s[0].name, s[0].position);
     filter->recognizing = false;
 }
 

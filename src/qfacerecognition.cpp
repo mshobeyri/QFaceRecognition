@@ -81,6 +81,8 @@ public:
 
     QFaceList knownFaces;
 
+    QFaceRecognitionMode mode;
+
     void extractFeatures(QFace& face);
     bool detectFace(const matrix<rgb_pixel>& img, QFace& face);
     QFaceList detectFaces(const matrix<rgb_pixel>& img);
@@ -267,6 +269,17 @@ QFaceRecognition::recognizeFile(const QString& path) {
         face.source = path;
     }
     return faceList;
+}
+
+uint
+QFaceRecognition::mode() const {
+    return static_cast<uint>(d_ptr->mode);
+}
+
+void
+QFaceRecognition::setMode(const uint& mode) {
+    d_ptr->mode = static_cast<QFaceRecognitionMode>(mode);
+    emit modeChanged();
 }
 
 double
