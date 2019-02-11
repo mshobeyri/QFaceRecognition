@@ -97,12 +97,6 @@ anet_type       QFaceRecognitionPrivate::net;
 
 void
 QFaceRecognitionPrivate::extractFeatures(QFace& face) {
-
-    static int s = 0;
-    s++;
-    dlib::save_jpeg(
-        face.faceChip,
-        QString("c:/Qt/" + QString::number(s) + ".jpg").toStdString());
     face.descriptor = net(face.faceChip);
 }
 

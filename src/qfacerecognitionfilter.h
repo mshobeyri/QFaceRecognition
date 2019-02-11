@@ -40,7 +40,8 @@ class QFaceRecognitionFilter : public QAbstractVideoFilter
     friend class QFaceRecognitionFilterRunnable;
 
     Q_OBJECT
-
+    Q_PROPERTY(QFaceRecognition* faceRecognition READ getFaceRecognizer)
+    Q_PROPERTY(QRectF captureRect MEMBER captureRect NOTIFY captureRectChanged)
 public:
     explicit QFaceRecognitionFilter(QObject* parent = 0);
     virtual ~QFaceRecognitionFilter();
@@ -51,7 +52,6 @@ public:
     QFaceRecognition* getFaceRecognizer() {
         return &fr;
     }
-
     QVideoFilterRunnable* createFilterRunnable();
 
 private:
@@ -61,6 +61,11 @@ private:
 
     SimpleVideoFrame frame;
     QFuture<void>    processThread;
+
+signals:
+    void faceDetected(QRect position);
+    void faceRecognized(QString name, QRect position);
+    void captureRectChanged();
 };
 
 class QFaceRecognitionFilterRunnable : public QObject,
@@ -80,7 +85,7 @@ public:
         SimpleVideoFrame& videoFrame, const QRect& captureRect);
 
 private:
-    QFaceList decode(const QImage& image);
+    QFaceList recognize(const QImage& image);
 
 private:
     QFaceRecognitionFilter* filter;

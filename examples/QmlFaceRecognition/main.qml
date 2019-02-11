@@ -19,6 +19,14 @@ Window {
 
     FaceRecognitionFilter{
         id: frFilter
+        captureRect: {
+            // setup bindings
+            videoOutput.contentRect;
+            videoOutput.sourceRect;
+            return videoOutput.mapRectToSource(videoOutput.mapNormalizedRectToItem(Qt.rect(
+                0, 0, 1, 1
+            )));
+        }
     }
 
     VideoOutput
