@@ -8,9 +8,7 @@
 #include <QtMultimedia/QVideoFrame>
 
 QFaceRecognitionFilter::QFaceRecognitionFilter(QObject* parent)
-    : QAbstractVideoFilter(parent), recognizing(false) {
-    fr.introduceFolder("../../assets/known");
-}
+    : QAbstractVideoFilter(parent), recognizing(false) {}
 
 QFaceRecognitionFilter::~QFaceRecognitionFilter() {
     if (!processThread.isFinished()) {
@@ -112,9 +110,8 @@ QFaceRecognitionFilterRunnable::processVideoFrameProbed(
     img = img.copy(captureRect);
     img = img.mirrored();
 
-    auto s = recognize(img);
-    if (s.length() > 0)
-        emit filter->faceRecognized(s[0].name, s[0].position);
+    recognize(img);
+
     filter->recognizing = false;
 }
 

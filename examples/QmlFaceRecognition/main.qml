@@ -17,36 +17,37 @@ Window {
             focusPointMode: CameraFocus.FocusPointAuto
         }
     }
+    Component.onCompleted: {
+        frFilter.faceRecognition.introduceFolder("../../assets/known")
+
+    }
 
     FaceRecognitionFilter{
         id: frFilter
+
         captureRect: {
             // setup bindings
             videoOutput.contentRect;
             videoOutput.sourceRect;
-            return videoOutput.mapRectToSource(videoOutput.mapNormalizedRectToItem(Qt.rect(
-                                                                                       0, 0, 1, 1
-                                                                                       )));
+            return videoOutput.mapRectToSource(
+                        videoOutput.mapNormalizedRectToItem(Qt.rect(
+                                                                0, 0, 1, 1
+                                                                )));
         }
         faceRecognition{
             mode: FaceRecognition.Recognize
-        }
-
-        onFaceRecognized: {
-            rr.isKnown = true
-            rr.name = name
-            rr.x = position.x
-            rr.y = position.y
-            rr.width = position.width
-            rr.height = position.height
+            distanceThreshold: 0.6
+            onRecognizeProcessEnded: {
+                rm.updateRects(names, positions)
+            }
         }
     }
 
     VideoOutput
     {
         id: videoOutput
-        source: camera
 
+        source: camera
         autoOrientation: true
         fillMode: VideoOutput.Stretch
         filters: [ frFilter ]
@@ -59,9 +60,9 @@ Window {
             }
         }
     }
-    RecognizeRect{
-        id: rr
-        width: 100
-        height: 100
+    RecognizeManager{
+        id: rm
+
+        anchors.fill: parent
     }
 }

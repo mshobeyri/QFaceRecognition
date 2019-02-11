@@ -70,7 +70,7 @@ using anet_type = loss_metric<fc_no_bias<
 class QFaceRecognitionPrivate
 {
 public:
-    QFaceRecognitionPrivate() {}
+    QFaceRecognitionPrivate(QFaceRecognition* q) : q_ptr(q) {}
 
     frontal_face_detector  detector = get_frontal_face_detector();
     static shape_predictor sp;
@@ -81,16 +81,19 @@ public:
 
     QFaceList knownFaces;
 
-    QFaceRecognitionMode mode;
+    QFaceRecognition::Mode mode = QFaceRecognition::Mode::Recognize;
 
     void extractFeatures(QFace& face);
     bool detectFace(const matrix<rgb_pixel>& img, QFace& face);
     QFaceList detectFaces(const matrix<rgb_pixel>& img);
-    void recognizeFace(QFace& face);
     QFaceList recognizeFaces(const matrix<rgb_pixel>& img);
     bool introduce(const QString& name, const matrix<rgb_pixel>& img);
 
     QStringList imagesInPath(const QString& path);
+
+private:
+    void recognizeFace(QFace& face);
+    QFaceRecognition* q_ptr;
 };
 
 shape_predictor QFaceRecognitionPrivate::sp;
@@ -152,6 +155,7 @@ QFaceRecognitionPrivate::recognizeFace(QFace& face) {
             m_distanceThreshold) {
             face.name    = knownFaces[j].name;
             face.isKnown = true;
+            emit q_ptr->faceRecognized(face.name, face.position);
             return;
         }
     }
@@ -160,9 +164,34 @@ QFaceRecognitionPrivate::recognizeFace(QFace& face) {
 QFaceList
 QFaceRecognitionPrivate::recognizeFaces(const matrix<rgb_pixel>& img) {
     QFaceList detectedFaces = detectFaces(img);
+    if (mode == QFaceRecognition::Mode::Detection) {
+        QList<QRect> positions;
+        for (auto& face : detectedFaces) {
+            emit q_ptr->faceDetected(face.position);
+            positions.push_back(face.position);
+        }
+        q_ptr->detectionProcessEnded(positions);
+    }
+
     for (auto& face : detectedFaces) {
         recognizeFace(face);
     }
+    if (mode == QFaceRecognition::Mode::Recognize) {
+        QStringList       names;
+        QStringList positions;
+        for (auto& face : detectedFaces) {
+            QString position =
+                QString::number(face.position.x()) +","+
+                    QString::number(face.position.y()) +","+
+                    QString::number(face.position.width()) +","+
+                    QString::number(face.position.height());
+
+            positions.push_back(position);
+            names.push_back(face.name);
+        }
+        q_ptr->recognizeProcessEnded(names, positions);
+    }
+
     return detectedFaces;
 }
 
@@ -195,7 +224,9 @@ QFaceRecognitionPrivate::imagesInPath(const QString& path) {
 ///////////////////////////////////////////////////////////////////////////////
 
 QFaceRecognition::QFaceRecognition(QObject* parent)
-    : QObject(parent), d_ptr(new QFaceRecognitionPrivate) {}
+    : QObject(parent), d_ptr(new QFaceRecognitionPrivate{this}) {
+    qRegisterMetaType<QRect>("QRect");
+}
 
 QFaceRecognition::~QFaceRecognition() {}
 
@@ -271,14 +302,14 @@ QFaceRecognition::recognizeFile(const QString& path) {
     return faceList;
 }
 
-uint
+QFaceRecognition::Mode
 QFaceRecognition::mode() const {
-    return static_cast<uint>(d_ptr->mode);
+    return d_ptr->mode;
 }
 
 void
-QFaceRecognition::setMode(const uint& mode) {
-    d_ptr->mode = static_cast<QFaceRecognitionMode>(mode);
+QFaceRecognition::setMode(const Mode& mode) {
+    d_ptr->mode = mode;
     emit modeChanged();
 }
 

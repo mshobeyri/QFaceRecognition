@@ -4,7 +4,7 @@ Item{
     id: iroot
 
     property string name
-    property bool isKnown: false
+    property bool isKnown: name !== ""
     property color color: isKnown?"green":"red"
     Rectangle {
         border.width: 1

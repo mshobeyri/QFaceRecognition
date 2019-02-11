@@ -63,8 +63,6 @@ private:
     QFuture<void>    processThread;
 
 signals:
-    void faceDetected(QRect position);
-    void faceRecognized(QString name, QRect position);
     void captureRectChanged();
 };
 
