@@ -1,12 +1,8 @@
 import QtQuick 2.0
 
 Item {
-    Item{
-        id: irectsContainer
-
-        anchors.fill: parent
-    }
     property var obejctList: []
+
     function updateRects(names, positions){
         while(obejctList.length > 0){
             obejctList.pop().destroy()
@@ -25,5 +21,11 @@ Item {
                 c.name = names[i]
             }
         }
+    }
+
+    Item{
+        id: irectsContainer
+
+        anchors.fill: parent
     }
 }

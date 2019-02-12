@@ -6,6 +6,7 @@ Item{
     property string name
     property bool isKnown: name !== ""
     property color color: isKnown?"green":"red"
+
     Rectangle {
         border.width: 1
         border.color: iroot.color
@@ -31,11 +32,14 @@ Item{
                 text: isKnown? iroot.name : "Unknown(click to introduce)"
                 color: "white"
             }
+
             MouseArea{
                 anchors.fill: parent
                 enabled: !isKnown
                 onClicked: {
-
+                    videoOutput.grabToImage(function(result) {
+                        introduceDialog.open(result,rm.obejctList.length!==1)
+                    });
                 }
             }
         }

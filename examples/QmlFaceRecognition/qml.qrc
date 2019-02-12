@@ -3,5 +3,6 @@
         <file>main.qml</file>
         <file>RecognizeRect.qml</file>
         <file>RecognizeManager.qml</file>
+        <file>IntroduceDialog.qml</file>
     </qresource>
 </RCC>

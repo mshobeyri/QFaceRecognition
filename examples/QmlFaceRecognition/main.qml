@@ -1,7 +1,7 @@
-import QtQuick 2.9
-import QtQuick.Window 2.2
+import QtQuick 2.0
+import QtQuick.Window 2.0
 import FaceRecognition 1.0
-import QtMultimedia 5.5
+import QtMultimedia 5.2
 
 Window {
     id: iwin
@@ -12,14 +12,11 @@ Window {
     Camera
     {
         id:camera
+
         focus {
             focusMode: CameraFocus.FocusContinuous
             focusPointMode: CameraFocus.FocusPointAuto
         }
-    }
-    Component.onCompleted: {
-        frFilter.faceRecognition.introduceFolder("../../assets/known")
-
     }
 
     FaceRecognitionFilter{
@@ -43,8 +40,7 @@ Window {
         }
     }
 
-    VideoOutput
-    {
+    VideoOutput{
         id: videoOutput
 
         source: camera
@@ -64,5 +60,8 @@ Window {
         id: rm
 
         anchors.fill: parent
+    }
+    IntroduceDialog{
+        id: introduceDialog
     }
 }

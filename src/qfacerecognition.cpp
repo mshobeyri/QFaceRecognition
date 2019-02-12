@@ -151,8 +151,7 @@ QFaceRecognitionPrivate::recognizeFace(QFace& face) {
         auto l = length(face.descriptor - knownFaces[j].descriptor);
         if (l < face.distance)
             face.distance = l;
-        if (length(face.descriptor - knownFaces[j].descriptor) <
-            m_distanceThreshold) {
+        if (l < m_distanceThreshold) {
             face.name    = knownFaces[j].name;
             face.isKnown = true;
             emit q_ptr->faceRecognized(face.name, face.position);
@@ -177,14 +176,13 @@ QFaceRecognitionPrivate::recognizeFaces(const matrix<rgb_pixel>& img) {
         recognizeFace(face);
     }
     if (mode == QFaceRecognition::Mode::Recognize) {
-        QStringList       names;
+        QStringList names;
         QStringList positions;
         for (auto& face : detectedFaces) {
-            QString position =
-                QString::number(face.position.x()) +","+
-                    QString::number(face.position.y()) +","+
-                    QString::number(face.position.width()) +","+
-                    QString::number(face.position.height());
+            QString position = QString::number(face.position.x()) + "," +
+                               QString::number(face.position.y()) + "," +
+                               QString::number(face.position.width()) + "," +
+                               QString::number(face.position.height());
 
             positions.push_back(position);
             names.push_back(face.name);
