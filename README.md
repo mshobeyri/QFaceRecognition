@@ -1,14 +1,14 @@
 # QFaceRecognition
 Qt/Qml lib for face detection/recogntion based on dlib
 
-##Features
+## Features
 
 * command line base recogntion
 * works with image files directly
 * video filter for recognize face works whit Qt Camera
 * Qml support
 
-##Build And Run
+## Build And Run
 
  first get dlib and build it using dlib build manual form [here](https://github.com/ageitgey/face_recognition).
  
@@ -16,7 +16,7 @@ Qt/Qml lib for face detection/recogntion based on dlib
  
  remember to install git lfs to get model files and set their pathes to **QFaceRecognition** class using _setModel_ function. something like this:
  
- '''
+'''
      QFaceRecognition::setModel(
         "../../model/dlib_face_recognition_resnet_model_v1.dat",
         "../../model/shape_predictor_5_face_landmarks.dat");
