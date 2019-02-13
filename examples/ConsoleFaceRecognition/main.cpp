@@ -12,9 +12,6 @@ int
 main(int argc, char* argv[]) {
     QCoreApplication a(argc, argv);
 
-    QImage                        src{"C:/Qt/erfan.png"};
-    dlib::matrix<dlib::rgb_pixel> dst;
-
     if (argc < 3) {
         qDebug() << "Run this example by invoking it like this: ";
         qDebug() << "./ConsoleFaceRecognition <known image folder> <unknown "
