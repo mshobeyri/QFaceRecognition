@@ -1,3 +1,4 @@
+
 # QFaceRecognition
 Qt/Qml lib for face detection/recogntion based on dlib
 
@@ -16,26 +17,28 @@ Qt/Qml lib for face detection/recogntion based on dlib
  
  remember to install git lfs to get model files and set their pathes to **QFaceRecognition** class using _setModel_ function. something like this:
  
-'''
-     QFaceRecognition::setModel(
+```cpp
+QFaceRecognition::setModel(
         "../../model/dlib_face_recognition_resnet_model_v1.dat",
         "../../model/shape_predictor_5_face_landmarks.dat");
-'''
+```
+
  
- ##Examples
- ###console face recognition
+## Examples
+
+### console face recognition
  
  the code api is so simple:
  
- '''
- 
+
+```cpp
 int
 main(int argc, char* argv[]) {
      QFaceRecognition f;
     f.introduceFolder(argv[1]); //known images folder path
     qDebug() << f.recognizeFolder(argv[2]);  unknown images folder path
 	}
-'''
+```
  
 you can run the project like this:
 
@@ -45,11 +48,11 @@ example:
 
 >./ConsoleFaceRecognition ../../assets/known ../../assets/unknown
 
-set the pathes relative.
+*note:* set the pathes relative.
 
 the output is name of known files paired with path of unknown files.
 
- ###qml face recognition
+### qml face recognition
  
  this is a real time face recognition project whit an output like this:
  
@@ -57,7 +60,8 @@ the output is name of known files paired with path of unknown files.
  
  you can see using video filter example in qml code here
  
-'''
+
+```css
 import QtQuick 2.0
 import QtQuick.Window 2.0
 import FaceRecognition 1.0
@@ -101,21 +105,27 @@ Window {
         fillMode: VideoOutput.Stretch
         filters: [ frFilter ]
     }
- 
 }
-'''
+```
+
+----
+*Note:*
+
 * use mode to switch ability of application form Detecting and Recognizing.
 * use distanceThreshold to change threshold of accepting two face is from same person.
 * you can limit capture image to captureRect section
 
 this are the signals you can use
-'''
+```cpp
     void faceDetected(QRect position);
     void faceRecognized(QString name, QRect position);
     void detectionProcessEnded(QList<QRect> positions); //emit just when mode is detection
     void recognizeProcessEnded(QStringList names, QStringList positions);
-'''
+```
 
+----
+
+## thanks
 **special thanks to saeed khodaigani**
  
  
