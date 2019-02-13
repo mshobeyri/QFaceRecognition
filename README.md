@@ -42,12 +42,13 @@ main(int argc, char* argv[]) {
  
 you can run the project like this:
 
-> ./ConsoleFaceRecognition <known image folder> <unknown images folder>
-
+```zsh
+./ConsoleFaceRecognition <known image folder> <unknown images folder>
+```
 example:
-
->./ConsoleFaceRecognition ../../assets/known ../../assets/unknown
-
+```zsh
+./ConsoleFaceRecognition ../../assets/known ../../assets/unknown
+```
 *note:* set the pathes relative.
 
 the output is name of known files paired with path of unknown files.
@@ -115,8 +116,9 @@ Window {
 * use distanceThreshold to change threshold of accepting two face is from same person.
 * you can limit capture image to captureRect section
 
-this are the signals you can use
+these are the signals you can use:
 ```cpp
+signals:
     void faceDetected(QRect position);
     void faceRecognized(QString name, QRect position);
     void detectionProcessEnded(QList<QRect> positions); //emit just when mode is detection
