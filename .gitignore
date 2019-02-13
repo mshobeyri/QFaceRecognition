@@ -72,7 +72,7 @@ Thumbs.db
 *.exe
 
 
-lib/
+*.lib
 
 3rdparty/
 
