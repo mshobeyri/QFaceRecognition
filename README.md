@@ -56,8 +56,7 @@ the output is name of known files paired with path of unknown files.
 ### qml face recognition
  
  this is a real time face recognition project whit an output like this:
- 
- 
+ ![Image](http://i65.tinypic.com/2dihked.png)
  
  you can see using video filter example in qml code here
  
