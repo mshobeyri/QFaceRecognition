@@ -75,5 +75,6 @@ Thumbs.db
 *.lib
 
 3rdparty/
+3rdparty/*
 
 bin/
