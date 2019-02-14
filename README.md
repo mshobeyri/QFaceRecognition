@@ -15,10 +15,7 @@ Qt/Qml lib for face detection/recogntion based on dlib
 clone project with it's submdoule "dlib" using following bash code
 
 ```
-git clone https://github.com/mshobeyri/QFaceRecognition.git
-cd QFaceRecognition
-git submodule update
-
+git clone --recurse-submodules https://github.com/mshobeyri/QFaceRecognition.git
 ```
 
 ### build & run
