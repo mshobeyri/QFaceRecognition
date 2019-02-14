@@ -17,7 +17,6 @@ clone project with it's submdoule "dlib" using following bash code
 ```
 git clone https://github.com/mshobeyri/QFaceRecognition.git
 cd QFaceRecognition
-git lfs install
 git submodule update
 
 ```
@@ -142,7 +141,7 @@ signals:
 ----
 
 ## thanks
-**special thanks to saeed khodaigani**
+**special thanks to saeed khodaygani**
  
  
  
