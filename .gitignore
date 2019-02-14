@@ -71,10 +71,6 @@ Thumbs.db
 *.dll
 *.exe
 
-
 *.lib
-
-3rdparty/
-3rdparty/*
 
 bin/
