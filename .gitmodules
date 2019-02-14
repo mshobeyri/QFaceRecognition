@@ -1,4 +1,3 @@
-[submodule "3rdparty/dlib"]
-	path = 3rdparty/dlib
+[submodule "dlib"]
+	path = dlib
 	url = https://github.com/davisking/dlib.git
-	branch = master
