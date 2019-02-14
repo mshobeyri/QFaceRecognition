@@ -11,11 +11,26 @@ Qt/Qml lib for face detection/recogntion based on dlib
 
 ## Build And Run
 
+### clone
+clone project with it's submdoule "dlib" using following bash code
+
+```
+git clone https://github.com/mshobeyri/QFaceRecognition.git
+cd QFaceRecognition
+git lfs install
+git submodule update
+
+```
+
+### build & run
  first get dlib and build it using dlib build manual form [here](https://github.com/ageitgey/face_recognition).
  
- then put dlib.lib file in lib folder in root of project.
+then copy dlib.lib file from "dlib build folder" in "lib" folder in root of project.
  
- remember to install git lfs to get model files and set their pathes to **QFaceRecognition** class using _setModel_ function. something like this:
+then you can run project.
+
+### usage
+remember to install git lfs to get model files and set their pathes to **QFaceRecognition** class using _setModel_ function. something like this:
  
 ```cpp
 QFaceRecognition::setModel(
