@@ -19,7 +19,8 @@ git clone --recurse-submodules https://github.com/mshobeyri/QFaceRecognition.git
 ```
 
 ### build & run
- first get dlib and build it using dlib build manual form [here](https://github.com/ageitgey/face_recognition).
+first get dlib and build it using dlib build manual form [here](https://github.com/ageitgey/face_recognition).
+but if you use qtcreator you can just open CMakeLists.txt file in dlib and build dlib.
  
 then copy dlib.lib file from "dlib build folder" in "lib" folder in root of project.
  
