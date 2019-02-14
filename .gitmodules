@@ -1,0 +1,3 @@
+[submodule "3rdparty/dlib"]
+	path = 3rdparty/dlib
+	url = https://github.com/davisking/dlib
