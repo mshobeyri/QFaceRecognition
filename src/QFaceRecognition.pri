@@ -1,8 +1,4 @@
-INCLUDEPATH += $$PWD/../3rdparty/dlib
-DEPENDPATH += $$PWD/../3rdparty/dlib
 
-INCLUDEPATH += $$PWD/
-DEPENDPATH += $$PWD/
 
 
 contains( QT, multimedia){
@@ -25,3 +21,13 @@ HEADERS += $$PWD/qfacerecognition.hpp \
 SOURCES += $$PWD/qfacerecognition.cpp \
     $$PWD/imageconvertor.cpp
 
+
+INCLUDEPATH += $$PWD/
+DEPENDPATH += $$PWD/
+
+INCLUDEPATH += $$PWD/../3rdparty/dlib
+DEPENDPATH += $$PWD/../3rdparty/dlib
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../lib/ -ldlib
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../lib/ -ldlibd
+else:unix: LIBS += -L$$PWD/../lib/ -ldlib

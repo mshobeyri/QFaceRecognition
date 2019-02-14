@@ -37,7 +37,3 @@ contains(QT_ARCH, i386): {
     CONFIG(release, debug|release): DESTDIR = $$PWD/../../bin/64
     else:CONFIG(debug, debug|release): DESTDIR = $$PWD/../../debug/64
 }
-
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../lib/ -ldlib
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../lib/ -ldlibd
-else:unix: LIBS += -L$$PWD/../../lib/ -ldlib
